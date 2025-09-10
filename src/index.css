@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Rich Text Editor Styles */
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+[contenteditable] h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+[contenteditable] h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0.875rem 0;
+}
+
+[contenteditable] h3 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0.75rem 0;
+}
+
+[contenteditable] h4 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin: 0.625rem 0;
+}
+
+[contenteditable] h5 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+[contenteditable] h6 {
+  font-size: 0.875rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+[contenteditable] p {
+  margin: 0.5rem 0;
+}
+
+[contenteditable] ul, [contenteditable] ol {
+  margin: 0.5rem 0;
+  padding-left: 2rem;
+}
+
+[contenteditable] li {
+  margin: 0.25rem 0;
+}
+
+[contenteditable] a {
+  color: #3B82F6;
+  text-decoration: underline;
+}
+
+[contenteditable] a:hover {
+  color: #1D4ED8;
+}
+
+[contenteditable] img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[contenteditable]:focus {
+  outline: none;
+}
