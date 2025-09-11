@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 import RichTextEditor from "../components/TextEditor";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 interface Blog {
   _id: string;
@@ -43,10 +44,7 @@ const BlogManagement: React.FC = () => {
     banner: null as string | null,
   });
 
-
-  useEffect(() => {
-
-    const fetchBlogs = async () => {
+ const fetchBlogs = async () => {
       try {
         const res = await axios.get("http://localhost:8003/blogs");
         setBlogs(res.data)
@@ -57,7 +55,7 @@ const BlogManagement: React.FC = () => {
         console.error("Error fetching blogs:", error);
       }
     };
-
+  useEffect(() => {
     fetchBlogs();
   }, []);
 
@@ -75,44 +73,89 @@ const BlogManagement: React.FC = () => {
   };
 
   // Submit blog
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     const formDataToSend = new FormData();
+  //     formDataToSend.append("blog_title", formData.blog_title);
+  //     formDataToSend.append("blog_title_url", formData.blog_title_url);
+  //     formDataToSend.append("blog_content", formData.blog_content);
+
+  //     // Append files (real File objects, not blob URLs)
+  //     if (formData.small_image) {
+  //       formDataToSend.append("small_image", formData.small_image);
+  //     }
+  //     if (formData.large_image) {
+  //       formDataToSend.append("large_image", formData.large_image);
+  //     }
+  //     if (formData.banner) {
+  //       formDataToSend.append("banner", formData.banner);
+  //     }
+
+  //     const response = await axios.post("http://localhost:8003/blogs", formDataToSend, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
+
+  //     console.log("📌 Blog successfully saved:", response);
+  //  toast.success("blog created  successfully")
+
+
+  //     // update state
+  //     setBlogs((prev) =>
+  //       editingBlog
+  //         ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
+  //         : [...prev, response.data]
+  //     );
+
+  //     resetForm();
+  //   } catch (error: any) {
+  //     console.error("❌ Error submitting blog:", error.response?.data || error.message);
+  //     toast.error("❌ Error submitting blog:", error.response?.data || error.message);
+
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("blog_title", formData.blog_title);
-      formDataToSend.append("blog_title_url", formData.blog_title_url);
-      formDataToSend.append("blog_content", formData.blog_content);
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append("blog_title", formData.blog_title);
+    formDataToSend.append("blog_title_url", formData.blog_title_url);
+    formDataToSend.append("blog_content", formData.blog_content);
 
-      // Append files (real File objects, not blob URLs)
-      if (formData.small_image) {
-        formDataToSend.append("small_image", formData.small_image);
-      }
-      if (formData.large_image) {
-        formDataToSend.append("large_image", formData.large_image);
-      }
-      if (formData.banner) {
-        formDataToSend.append("banner", formData.banner);
-      }
+    if (formData.small_image) formDataToSend.append("small_image", formData.small_image);
+    if (formData.large_image) formDataToSend.append("large_image", formData.large_image);
+    if (formData.banner) formDataToSend.append("banner", formData.banner);
 
-      const response = await axios.post("http://localhost:8003/blogs", formDataToSend, {
+    // 👉 Wrap axios call in toast.promise
+    const response = await toast.promise(
+      axios.post("http://localhost:8003/blogs", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
-      });
+      }),
+      {
+        pending: "⏳ Creating blog...",
+        success: "✅ Blog created successfully!",
+        error: "❌ Error submitting blog",
+      }
+    );
 
-      console.log("📌 Blog successfully saved:", response.data);
+    console.log(response, "654684791651847")
 
-      // update state
-      setBlogs((prev) =>
-        editingBlog
-          ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
-          : [...prev, response.data]
-      );
+    // update state
+    setBlogs((prev) =>
+      editingBlog
+        ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
+        : [...prev, response.data]
+    );
 
-      resetForm();
-    } catch (error: any) {
-      console.error("❌ Error submitting blog:", error.response?.data || error.message);
-    }
-  };
+    resetForm();
+  } catch (error: any) {
+    console.error("❌ Error submitting blog:", error.response?.data || error.message);
+    // error already handled by toast.promise
+  }
+};
 
   // Reset form
   const resetForm = () => {
@@ -142,15 +185,42 @@ const BlogManagement: React.FC = () => {
     setShowForm(true);
   };
 
-  // Delete blog
-  const handleDelete = (id: string) => {
-   console.log(id)
-  };
+const handleDelete = async (id: string) => {
+  try {
+    // Confirmation popup
+    const confirmDelete = window.confirm("Are you sure you want to delete this blog?");
+    if (!confirmDelete) return; // stop if user cancels
+
+    // API call
+    const response = await axios.delete(`http://localhost:8003/blogs/deleteBlog/${id}`);
+
+    // Success log
+    console.log("✅ Blog deleted:", response.data);
+    toast.success("Blog deleted successfully!");
+    fetchBlogs()
+  } catch (error: any) {
+    if (error.response) {
+      // Server responded with a status code outside 2xx
+      console.error("❌ Server Error:", error.response.data);
+      toast.error(`Failed to delete blog: ${error.response.data.message || "Server error"}`);
+    } else if (error.request) {
+      // No response from server
+      console.error("❌ Network Error:", error.request);
+      toast.error("No response from server. Please try again later.");
+    } else {
+      // Something else went wrong
+      console.error("❌ Error:", error.message);
+      toast.error("An unexpected error occurred.");
+    }
+  }
+};
+
+
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900"></h1>
         <button
           onClick={() => setShowForm(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
