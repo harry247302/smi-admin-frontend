@@ -46,7 +46,7 @@ const BlogManagement: React.FC = () => {
 
  const fetchBlogs = async () => {
       try {
-        const res = await axios.get("http://localhost:8003/blogs");
+        const res = await axios.get("https://web.smilessence.co.in/blogs");
         setBlogs(res.data)
         console.log(res.data);
 
@@ -93,7 +93,7 @@ const BlogManagement: React.FC = () => {
   //       formDataToSend.append("banner", formData.banner);
   //     }
 
-  //     const response = await axios.post("http://localhost:8003/blogs", formDataToSend, {
+  //     const response = await axios.post("/blogs", formDataToSend, {
   //       headers: { "Content-Type": "multipart/form-data" },
   //     });
 
@@ -131,7 +131,7 @@ const BlogManagement: React.FC = () => {
 
     // 👉 Wrap axios call in toast.promise
     const response = await toast.promise(
-      axios.post("http://localhost:8003/blogs", formDataToSend, {
+      axios.post("https://web.smilessence.co.in/blogs", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       }),
       {
@@ -192,7 +192,7 @@ const handleDelete = async (id: string) => {
     if (!confirmDelete) return; // stop if user cancels
 
     // API call
-    const response = await axios.delete(`http://localhost:8003/blogs/deleteBlog/${id}`);
+    const response = await axios.delete(`https://web.smilessence.co.in/blogs/deleteBlog/${id}`);
 
     // Success log
     console.log("✅ Blog deleted:", response.data);
