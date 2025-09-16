@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
       const checkAuth = async () => {
           try {
-              const res = await axios.get("http://localhost:8003/admin/checkAuth", {
+              const res = await axios.get(`${import.meta.env.VITE_PROD}/admin/checkAuth`, {
                   withCredentials: true, // ✅ important for cookies
                 });
                 console.log(res,"--------------------------------------------");

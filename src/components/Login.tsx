@@ -12,11 +12,13 @@ const Login: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("http://localhost:8003/admin/verify", {
+        const res = await fetch(`${import.meta.env.VITE_PROD}/admin/checkAuth`, {
           method: "GET",
           credentials: "include", // sends cookie
         });
         const data = await res.json();
+        console.log(data,"::::::::::::::::::::::::::::::");
+        
         if (data.success) {
           navigate("/"); // redirect to home if already logged in
         }
@@ -44,7 +46,7 @@ const Login: React.FC = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:8003/admin/login", {
+      const res = await fetch(`${import.meta.env.VITE_PROD}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // store cookie
