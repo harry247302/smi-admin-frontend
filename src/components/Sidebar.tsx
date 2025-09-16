@@ -4,6 +4,7 @@ import {
   Settings, 
   Users, 
   Search,
+  Lock,
   X,
   Menu
 } from 'lucide-react';
@@ -26,6 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'services', label: 'Service Management', icon: Settings },
     { id: 'leads', label: 'Lead Management', icon: Users },
     { id: 'seo', label: 'SEO Management', icon: Search },
+    
   ];
 
   return (
@@ -77,6 +79,22 @@ const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </nav>
+          <button
+                // key={item.id}
+                onClick={() => {
+                  setActiveTab("item.id");
+                 
+                }}
+                className={`
+                  w-full flex items-center px-6 py-3 text-left transition-colors duration-200
+                  ${activeTab === "item.id"
+                    ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }
+                `}
+              >
+                Logout
+              </button>
       </div>
     </>
   );

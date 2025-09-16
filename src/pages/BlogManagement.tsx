@@ -48,9 +48,7 @@ const BlogManagement: React.FC = () => {
       try {
         const res = await axios.get("https://web.smilessence.co.in/blogs");
         setBlogs(res.data)
-        console.log(res.data);
-
-
+        console.log(res,"||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
       } catch (error) {
         console.error("Error fetching blogs:", error);
       }
@@ -60,7 +58,6 @@ const BlogManagement: React.FC = () => {
   }, []);
 
 
-  // Handle file selection (local preview only)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -391,7 +388,7 @@ const handleDelete = async (id: string) => {
                     {blog.blog_title_url}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {blog.blogSeoDetails ? "No" : "Yes"}
+                    {blog.blogSeoDetails? "Yes" : "No"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <a target="_blank" href={blog.blog_title_url}>Click to view</a>

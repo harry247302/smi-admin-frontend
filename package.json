@@ -21,6 +21,7 @@
     "react-froala-wysiwyg": "^4.6.2",
     "react-hot-toast": "^2.6.0",
     "react-quill": "^2.0.0",
+    "react-router-dom": "^7.9.1",
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
