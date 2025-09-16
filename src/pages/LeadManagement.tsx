@@ -23,7 +23,9 @@ const LeadManagement: React.FC = () => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://web.smilessence.co.in/enquiry");
+      const res = await axios.get(`${import.meta.env.VITE_PROD}/enquiry`,{
+         withCredentials: true,
+      });
       console.log(res,"||||||||||||||||||||||||||||||||||||||||||||");
       setLeads(res?.data?.data);
     } catch (error) {
@@ -49,7 +51,9 @@ const LeadManagement: React.FC = () => {
     if (!confirm("Are you sure you want to delete this lead?")) return;
 
     try {
-      await axios.delete(`https://web.smilessence.co.in/enquiry/${id}`);
+      await axios.delete(`${import.meta.env.VITE_PROD}/enquiry/${id}`,{
+         withCredentials: true,
+      });
       setLeads((prev) => prev.filter((lead) => lead._id !== id));
     } catch (error) {
       console.error("Error deleting lead:", error);
@@ -67,8 +71,9 @@ const LeadManagement: React.FC = () => {
     if (!confirm("Are you sure you want to delete selected leads?")) return;
 
     try {
-      await axios.delete("httphttps://web.smilessence.co.in/enquiry", {
+      await axios.delete(`${import.meta.env.VITE_PROD}/enquiry`, {
         data: { ids: selectedLeads },
+         withCredentials: true,
       });
       setLeads((prev) => prev.filter((lead) => !selectedLeads.includes(lead._id)));
       setSelectedLeads([]);

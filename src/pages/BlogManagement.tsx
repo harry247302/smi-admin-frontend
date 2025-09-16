@@ -46,7 +46,10 @@ const BlogManagement: React.FC = () => {
 
  const fetchBlogs = async () => {
       try {
-        const res = await axios.get("https://web.smilessence.co.in/blogs");
+        const res = await axios.get(`${import.meta.env.VITE_PROD}/blogs`,{
+          withCredentials: true,
+        });
+
         setBlogs(res.data)
         console.log(res,"||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
       } catch (error) {
@@ -127,16 +130,19 @@ const BlogManagement: React.FC = () => {
     if (formData.banner) formDataToSend.append("banner", formData.banner);
 
     // 👉 Wrap axios call in toast.promise
-    const response = await toast.promise(
-      axios.post("https://web.smilessence.co.in/blogs", formDataToSend, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }),
-      {
-        pending: "⏳ Creating blog...",
-        success: "✅ Blog created successfully!",
-        error: "❌ Error submitting blog",
-      }
-    );
+ const response = await toast.promise(
+  axios.post(`${import.meta.env.VITE_PROD}/blogs`, formDataToSend, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    withCredentials: true, // ✅ REQUIRED for cookies to be sent
+  }),
+  {
+    pending: "⏳ Creating blog...",
+    success: "✅ Blog created successfully!",
+    error: "❌ Error submitting blog",
+  }
+);
 
     console.log(response, "654684791651847")
 
@@ -189,7 +195,9 @@ const handleDelete = async (id: string) => {
     if (!confirmDelete) return; // stop if user cancels
 
     // API call
-    const response = await axios.delete(`https://web.smilessence.co.in/blogs/deleteBlog/${id}`);
+    const response = await axios.delete(`${import.meta.env.VITE_PROD}/blogs/deleteBlog/${id}`,{
+       withCredentials: true,
+    });
 
     // Success log
     console.log("✅ Blog deleted:", response.data);

@@ -75,11 +75,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     const response = await fetch(
-      "https://web.smilessence.co.in/SeoRouter/CreateSeoFormBlog",
+      `${import.meta.env.VITE_PROD}/SeoRouter/CreateSeoFormBlog`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...seoData, blog_id: id }),
+          credentials: "include", 
       }
     );
 
@@ -111,7 +112,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   const fetchBlogs = async () => {
     try {
-      const res = await axios.get("https://web.smilessence.co.in/blogs");
+      const res = await axios.get(`${import.meta.env.VITE_PROD}/blogs`,{
+         withCredentials: true,
+      });
       setBlogs(res.data)
 
     } catch (error) {
