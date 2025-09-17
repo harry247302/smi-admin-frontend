@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   // 🔑 Logout API Call
   const handleLogout = async () => {
     try {
-      const res = await fetch("http://localhost:8003/admin/logout", {
+      const res = await fetch(`${import.meta.env.VITE_PROD}/admin/logout`, {
         method: "POST",
         credentials: "include", // include cookies
       });
