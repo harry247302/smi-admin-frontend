@@ -4,9 +4,7 @@ import {
   Settings, 
   Users, 
   Search,
-  Lock,
-  X,
-  Menu
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,8 +25,29 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'services', label: 'Service Management', icon: Settings },
     { id: 'leads', label: 'Lead Management', icon: Users },
     { id: 'seo', label: 'SEO Management', icon: Search },
-    
   ];
+
+  // 🔑 Logout API Call
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:8003/admin/logout", {
+        method: "POST",
+        credentials: "include", // include cookies
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert("Logged out successfully");
+        // Redirect to login page (adjust your route accordingly)
+        window.location.href = "/login";
+      } else {
+        alert(data.message || "Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Something went wrong during logout");
+    }
+  };
 
   return (
     <>
@@ -78,23 +97,15 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
             );
           })}
-        </nav>
+
+          {/* 🔴 Logout Button */}
           <button
-                // key={item.id}
-                onClick={() => {
-                  setActiveTab("item.id");
-                 
-                }}
-                className={`
-                  w-full flex items-center px-6 py-3 text-left transition-colors duration-200
-                  ${activeTab === "item.id"
-                    ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }
-                `}
-              >
-                Logout
-              </button>
+            onClick={handleLogout}
+            className="w-full flex items-center px-6 py-3 text-left transition-colors duration-200 text-gray-600 hover:bg-red-50 hover:text-red-600"
+          >
+            Logout
+          </button>
+        </nav>
       </div>
     </>
   );
