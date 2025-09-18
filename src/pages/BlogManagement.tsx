@@ -5,6 +5,23 @@ import RichTextEditor from "../components/TextEditor";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// interface Blog {
+//   _id: string;
+//   blog_title: string;
+//   blog_title_url: string;
+//   blog_content: string;
+//   small_image: string;
+//   large_image: string;
+//   blogSeoDetails?: Object;
+//   banner: string | null;
+//   status: string;
+//   createdAt: string;
+// }
+
+interface BlogSeoDetails {
+  _id: string;
+}
+
 interface Blog {
   _id: string;
   blog_title: string;
@@ -12,11 +29,13 @@ interface Blog {
   blog_content: string;
   small_image: string;
   large_image: string;
-  blogSeoDetails?: string;
+  blogSeoDetails?: BlogSeoDetails; // ✅ instead of Object
   banner: string | null;
   status: string;
   createdAt: string;
 }
+
+
 
 const BlogManagement: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([
@@ -44,18 +63,18 @@ const BlogManagement: React.FC = () => {
     banner: null as string | null,
   });
 
- const fetchBlogs = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_PROD}/blogs`,{
-          withCredentials: true,
-        });
+  const fetchBlogs = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_PROD}/blogs`, {
+        withCredentials: true,
+      });
 
-        setBlogs(res.data)
-        console.log(res,"||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-      } catch (error) {
-        console.error("Error fetching blogs:", error);
-      }
-    };
+      setBlogs(res.data)
+      console.log(res, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    }
+  };
   useEffect(() => {
     fetchBlogs();
   }, []);
@@ -117,48 +136,48 @@ const BlogManagement: React.FC = () => {
   // };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const formDataToSend = new FormData();
-    formDataToSend.append("blog_title", formData.blog_title);
-    formDataToSend.append("blog_title_url", formData.blog_title_url);
-    formDataToSend.append("blog_content", formData.blog_content);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("blog_title", formData.blog_title);
+      formDataToSend.append("blog_title_url", formData.blog_title_url);
+      formDataToSend.append("blog_content", formData.blog_content);
 
-    if (formData.small_image) formDataToSend.append("small_image", formData.small_image);
-    if (formData.large_image) formDataToSend.append("large_image", formData.large_image);
-    if (formData.banner) formDataToSend.append("banner", formData.banner);
+      if (formData.small_image) formDataToSend.append("small_image", formData.small_image);
+      if (formData.large_image) formDataToSend.append("large_image", formData.large_image);
+      if (formData.banner) formDataToSend.append("banner", formData.banner);
 
-    // 👉 Wrap axios call in toast.promise
- const response = await toast.promise(
-  axios.post(`${import.meta.env.VITE_PROD}/blogs`, formDataToSend, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    withCredentials: true, // ✅ REQUIRED for cookies to be sent
-  }),
-  {
-    pending: "⏳ Creating blog...",
-    success: "✅ Blog created successfully!",
-    error: "❌ Error submitting blog",
-  }
-);
+      // 👉 Wrap axios call in toast.promise
+      const response = await toast.promise(
+        axios.post(`${import.meta.env.VITE_PROD}/blogs`, formDataToSend, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true, // ✅ REQUIRED for cookies to be sent
+        }),
+        {
+          pending: "⏳ Creating blog...",
+          success: "✅ Blog created successfully!",
+          error: "❌ Error submitting blog",
+        }
+      );
 
-    console.log(response, "654684791651847")
+      console.log(response, "654684791651847")
 
-    // update state
-    setBlogs((prev) =>
-      editingBlog
-        ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
-        : [...prev, response.data]
-    );
+      // update state
+      setBlogs((prev) =>
+        editingBlog
+          ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
+          : [...prev, response.data]
+      );
 
-    resetForm();
-  } catch (error: any) {
-    console.error("❌ Error submitting blog:", error.response?.data || error.message);
-    // error already handled by toast.promise
-  }
-};
+      resetForm();
+    } catch (error: any) {
+      console.error("❌ Error submitting blog:", error.response?.data || error.message);
+      // error already handled by toast.promise
+    }
+  };
 
   // Reset form
   const resetForm = () => {
@@ -188,40 +207,50 @@ const BlogManagement: React.FC = () => {
     setShowForm(true);
   };
 
-const handleDelete = async (id: string) => {
-  try {
-    // Confirmation popup
-    const confirmDelete = window.confirm("Are you sure you want to delete this blog?");
-    if (!confirmDelete) return; // stop if user cancels
+  const handleDelete = async (id: string) => {
+    try {
+      // Confirmation popup
+      const confirmDelete = window.confirm("Are you sure you want to delete this blog?");
+      if (!confirmDelete) return; // stop if user cancels
 
-    // API call
-    const response = await axios.delete(`${import.meta.env.VITE_PROD}/blogs/deleteBlog/${id}`,{
-       withCredentials: true,
-    });
+      // API call
+      const response = await axios.delete(`${import.meta.env.VITE_PROD}/blogs/deleteBlog/${id}`, {
+        withCredentials: true,
+      });
 
-    // Success log
-    console.log("✅ Blog deleted:", response.data);
-    toast.success("Blog deleted successfully!");
-    fetchBlogs()
-  } catch (error: any) {
-    if (error.response) {
-      // Server responded with a status code outside 2xx
-      console.error("❌ Server Error:", error.response.data);
-      toast.error(`Failed to delete blog: ${error.response.data.message || "Server error"}`);
-    } else if (error.request) {
-      // No response from server
-      console.error("❌ Network Error:", error.request);
-      toast.error("No response from server. Please try again later.");
-    } else {
-      // Something else went wrong
-      console.error("❌ Error:", error.message);
-      toast.error("An unexpected error occurred.");
+      // Success log
+      console.log("✅ Blog deleted:", response.data);
+      toast.success("Blog deleted successfully!");
+      fetchBlogs()
+    } catch (error: any) {
+      if (error.response) {
+        // Server responded with a status code outside 2xx
+        console.error("❌ Server Error:", error.response.data);
+        toast.error(`Failed to delete blog: ${error.response.data.message || "Server error"}`);
+      } else if (error.request) {
+        // No response from server
+        console.error("❌ Network Error:", error.request);
+        toast.error("No response from server. Please try again later.");
+      } else {
+        // Something else went wrong
+        console.error("❌ Error:", error.message);
+        toast.error("An unexpected error occurred.");
+      }
     }
-  }
-};
+  };
 
-
-
+  const handleDeleteSeo = async (id: string) => {
+    try {
+      const res = await axios.delete(`${import.meta.env.VITE_PROD}/SeoRouter/delete/${id}`, {
+        withCredentials: true,
+      });
+      toast.success("SEO deleted successfully!");
+    fetchBlogs()
+    } catch (error) {
+      console.error("Error deleting SEO:", error);
+      // handle error (toast, alert, etc.)
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -361,6 +390,8 @@ const handleDelete = async (id: string) => {
                   Blog Title Url                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   SEO
+
+
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Large Image
@@ -396,7 +427,22 @@ const handleDelete = async (id: string) => {
                     {blog.blog_title_url}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {blog.blogSeoDetails? "Yes" : "No"}
+                    {blog.blogSeoDetails ? <div className="flex items-center">
+                      {/* <button
+                      onClick={() => handleDeleteSeo(blog?.blogSeoDetails?._id)}
+                      className="text-red-600 hover:text-red-900 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button> */}
+                      <button
+                        onClick={() => handleDeleteSeo(blog.blogSeoDetails?._id!)}
+                        className="text-red-600 hover:text-red-900 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <p>Yes</p>
+                    </div> : "No"}
+
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <a target="_blank" href={blog.blog_title_url}>Click to view</a>
