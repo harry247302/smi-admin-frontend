@@ -456,7 +456,7 @@ const BlogManagement: React.FC = () => {
                       onClick={() => handleEdit(blog)}
                       className="text-blue-600 hover:text-blue-900 p-1"
                     >
-                      <Edit className="w-4 h-4" />
+                      {/* <Edit className="w-4 h-4" /> */}
                     </button>
                     <button
                       onClick={() => handleDelete(blog._id)}
