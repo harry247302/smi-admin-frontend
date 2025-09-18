@@ -314,13 +314,13 @@ const BlogManagement: React.FC = () => {
                   />
                 </div>
               </div>
-
               {/* Images */}
               <div className="grid md:grid-cols-3 gap-4">
                 {["small_image", "large_image", "banner"].map((field) => (
                   <div key={field}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.toUpperCase()}
+                      {field.toUpperCase()}<p className="text-red-400">Image size should be 6MB</p>
+
                     </label>
                     <input
                       type="file"
@@ -338,6 +338,7 @@ const BlogManagement: React.FC = () => {
                   </div>
                 ))}
               </div>
+              
 
               {/* Rich Text Editor */}
               <div>
@@ -445,7 +446,7 @@ const BlogManagement: React.FC = () => {
 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <a target="_blank" href={blog.blog_title_url}>Click to view</a>
+                    <a target="_blank" href={blog.banner!}>Click to view</a>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <a target="_blank" href={blog.small_image}>Click to view</a>
