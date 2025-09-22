@@ -30,7 +30,7 @@ const ServiceManagement: React.FC = () => {
     service_content: ''
   });
 
-  const API_BASE = 'http://localhost:8003/service';
+  const API_BASE = `${import.meta.env.VITE_PROD}/service`;
 
   // ================= FETCH ALL SERVICES =================
   const fetchServices = async () => {
