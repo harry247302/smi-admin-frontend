@@ -113,7 +113,7 @@ const handleSubmit = async (e: FormEvent) => {
     if (editingService && editingService._id) {
       // UPDATE
       res = await axios.put(
-        `${API_BASE}/update/${editingService._id}`,
+        `${API_BASE}/service/update/${editingService._id}`,
         payload,
         {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -122,7 +122,7 @@ const handleSubmit = async (e: FormEvent) => {
     } else {
       // CREATE
       res = await axios.post(
-        `${API_BASE}/create`,
+        `${API_BASE}/service/create`,
         payload,
         {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -176,7 +176,8 @@ const handleSubmit = async (e: FormEvent) => {
     if (!window.confirm('Are you sure you want to delete this service?')) return;
 
     try {
-      const res = await axios.delete(`${API_BASE}/deleteMany/${id}`);
+      const res = await axios.delete(`${API_BASE}/service/deleteMany/${id}`);
+      console.log(res,":;;;;;;;;;;;;;;;");
       const data = res.data;
       if (res.status >= 400) {
         throw new Error(data.message || 'Failed to delete service');
@@ -194,7 +195,7 @@ const handleSubmit = async (e: FormEvent) => {
     if (!seoId) return;
     if (!window.confirm('Delete SEO?')) return;
     try {
-      const res = await axios.delete(`http://localhost:8003/SeoRouter/delete/${seoId}`);
+      const res = await axios.delete(`https://web.smilessence.co.in/SeoRouter/delete/${seoId}`);
       const data = res.data;
       if (res.status >= 400) throw new Error(data.message || 'Failed to delete SEO');
       toast.success('SEO deleted successfully!');
