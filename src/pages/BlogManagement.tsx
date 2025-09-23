@@ -1,22 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
+
+import React, { useEffect, useState, useRef } from "react";
+import { Plus, Trash2, Save, X } from "lucide-react";
 import RichTextEditor from "../components/TextEditor";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-// interface Blog {
-//   _id: string;
-//   blog_title: string;
-//   blog_title_url: string;
-//   blog_content: string;
-//   small_image: string;
-//   large_image: string;
-//   blogSeoDetails?: Object;
-//   banner: string | null;
-//   status: string;
-//   createdAt: string;
-// }
 
 interface BlogSeoDetails {
   _id: string;
@@ -29,143 +17,174 @@ interface Blog {
   blog_content: string;
   small_image: string;
   large_image: string;
-  blogSeoDetails?: BlogSeoDetails; // ✅ instead of Object
+  blogSeoDetails?: BlogSeoDetails;
   banner: string | null;
   status: string;
   createdAt: string;
 }
 
+type FileOrNull = File | null;
 
+interface FormDataState {
+  blog_title: string;
+  blog_title_url: string;
+  blog_content: string;
+  small_image: FileOrNull;
+  large_image: FileOrNull;
+  banner: FileOrNull;
+  small_imagePreview: string | null;
+  large_imagePreview: string | null;
+  bannerPreview: string | null;
+}
 
 const BlogManagement: React.FC = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([
-    {
-      _id: "",
-      blog_title: "Sample Blog Post",
-      blog_title_url: "This is a sample blog_title_url",
-      blog_content: "This is the main blog_content of the blog post...",
-      small_image: "",
-      large_image: "",
-      banner: "",
-      status: "Published",
-      createdAt: "2024-01-15",
-    },
-  ]);
-
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<FormDataState>({
     blog_title: "",
     blog_title_url: "",
     blog_content: "",
-    small_image: null as string | null,
-    large_image: null as string | null,
-    banner: null as string | null,
+    small_image: null,
+    large_image: null,
+    banner: null,
+    small_imagePreview: null,
+    large_imagePreview: null,
+    bannerPreview: null,
   });
 
+  // Cleanup refs for object URLs to avoid memory leaks
+  const filePreviewsRef = useRef<(string | null)[]>([]);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
+
+  // Fetch blogs list
   const fetchBlogs = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_PROD}/blogs`, {
         withCredentials: true,
       });
-
-      setBlogs(res.data)
-      console.log(res, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+      setBlogs(res.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
+      toast.error("Failed to fetch blogs");
     }
   };
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
 
+  // Clean up object URLs to avoid memory leaks
+  const revokePreviews = () => {
+    filePreviewsRef.current.forEach((url) => url && URL.revokeObjectURL(url));
+    filePreviewsRef.current = [];
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
-    const file = e.target.files?.[0];
+  // Handle file input changes for images
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof FormDataState) => {
+    const file = e.target.files?.[0] || null;
     if (!file) return;
+
+    // Revoke previous preview URL if any for this field
+    const prevUrl = formData[`${field}Preview` as keyof FormDataState];
+    if (prevUrl) URL.revokeObjectURL(prevUrl);
+
+    const previewUrl = URL.createObjectURL(file);
 
     setFormData((prev) => ({
       ...prev,
-      [field]: file,              // store File object
-      [`${field}Preview`]: URL.createObjectURL(file), // optional preview
+      [field]: file,
+      [`${field}Preview`]: previewUrl,
     }));
+
+    // Track URLs to revoke on unmount
+    filePreviewsRef.current.push(previewUrl);
   };
 
-  // Submit blog
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
+  // Reset form and clear editing state
+  const resetForm = () => {
+    revokePreviews();
+    setFormData({
+      blog_title: "",
+      blog_title_url: "",
+      blog_content: "",
+      small_image: null,
+      large_image: null,
+      banner: null,
+      small_imagePreview: null,
+      large_imagePreview: null,
+      bannerPreview: null,
+    });
+    setEditingBlog(null);
+    setShowForm(false);
+  };
 
-  //   try {
-  //     const formDataToSend = new FormData();
-  //     formDataToSend.append("blog_title", formData.blog_title);
-  //     formDataToSend.append("blog_title_url", formData.blog_title_url);
-  //     formDataToSend.append("blog_content", formData.blog_content);
+  // Populate form for editing a blog
+  const handleEdit = (blog: Blog) => {
+    revokePreviews();
 
-  //     // Append files (real File objects, not blob URLs)
-  //     if (formData.small_image) {
-  //       formDataToSend.append("small_image", formData.small_image);
-  //     }
-  //     if (formData.large_image) {
-  //       formDataToSend.append("large_image", formData.large_image);
-  //     }
-  //     if (formData.banner) {
-  //       formDataToSend.append("banner", formData.banner);
-  //     }
+    setFormData({
+      blog_title: blog.blog_title,
+      blog_title_url: blog.blog_title_url,
+      blog_content: blog.blog_content,
+      small_image: null,
+      large_image: null,
+      banner: null,
+      small_imagePreview: blog.small_image || null,
+      large_imagePreview: blog.large_image || null,
+      bannerPreview: blog.banner || null,
+    });
 
-  //     const response = await axios.post("/blogs", formDataToSend, {
-  //       headers: { "Content-Type": "multipart/form-data" },
-  //     });
+    setEditingBlog(blog);
+    setShowForm(true);
+  };
 
-  //     console.log("📌 Blog successfully saved:", response);
-  //  toast.success("blog created  successfully")
-
-
-  //     // update state
-  //     setBlogs((prev) =>
-  //       editingBlog
-  //         ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
-  //         : [...prev, response.data]
-  //     );
-
-  //     resetForm();
-  //   } catch (error: any) {
-  //     console.error("❌ Error submitting blog:", error.response?.data || error.message);
-  //     toast.error("❌ Error submitting blog:", error.response?.data || error.message);
-
-  //   }
-  // };
-
+  // Submit create or update form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("blog_title", formData.blog_title);
-      formDataToSend.append("blog_title_url", formData.blog_title_url);
-      formDataToSend.append("blog_content", formData.blog_content);
+      const formPayload = new FormData();
 
-      if (formData.small_image) formDataToSend.append("small_image", formData.small_image);
-      if (formData.large_image) formDataToSend.append("large_image", formData.large_image);
-      if (formData.banner) formDataToSend.append("banner", formData.banner);
+      formPayload.append("blog_title", formData.blog_title);
+      formPayload.append("blog_title_url", formData.blog_title_url);
+      formPayload.append("blog_content", formData.blog_content);
 
-      // 👉 Wrap axios call in toast.promise
-      const response = await toast.promise(
-        axios.post(`${import.meta.env.VITE_PROD}/blogs`, formDataToSend, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true, // ✅ REQUIRED for cookies to be sent
-        }),
-        {
-          pending: "⏳ Creating blog...",
-          success: "✅ Blog created successfully!",
-          error: "❌ Error submitting blog",
-        }
-      );
+      if (formData.small_image) formPayload.append("small_image", formData.small_image);
+      if (formData.large_image) formPayload.append("large_image", formData.large_image);
+      if (formData.banner) formPayload.append("banner", formData.banner);
 
-      console.log(response, "654684791651847")
+      let response;
 
-      // update state
+      if (editingBlog) {
+        // Update existing blog
+        response = await toast.promise(
+          axios.put(`${import.meta.env.VITE_PROD}/blogs/${editingBlog._id}`, formPayload, {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }),
+          {
+            pending: "⏳ Updating blog...",
+            success: "✅ Blog updated successfully!",
+            error: "❌ Failed to update blog",
+          }
+        );
+      } else {
+        // Create new blog
+        response = await toast.promise(
+          axios.post(`${import.meta.env.VITE_PROD}/blogs`, formPayload, {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }),
+          {
+            pending: "⏳ Creating blog...",
+            success: "✅ Blog created successfully!",
+            error: "❌ Failed to create blog",
+          }
+        );
+      }
+
+      // Update blogs state
       setBlogs((prev) =>
         editingBlog
           ? prev.map((b) => (b._id === editingBlog._id ? response.data : b))
@@ -174,89 +193,52 @@ const BlogManagement: React.FC = () => {
 
       resetForm();
     } catch (error: any) {
-      console.error("❌ Error submitting blog:", error.response?.data || error.message);
-      // error already handled by toast.promise
+      console.error("Error submitting blog:", error.response?.data || error.message);
+      // toast.promise handles error notification already
     }
   };
 
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      blog_title: "",
-      blog_title_url: "",
-      blog_content: "",
-      small_image: null,
-      large_image: null,
-      banner: null,
-    });
-    setShowForm(false);
-    setEditingBlog(null);
-  };
-
-  // Edit blog
-  const handleEdit = (blog: Blog) => {
-    setEditingBlog(blog);
-    setFormData({
-      blog_title: blog.blog_title,
-      blog_title_url: blog.blog_title_url,
-      blog_content: blog.blog_content,
-      small_image: blog.small_image,
-      large_image: blog.large_image,
-      banner: blog.banner,
-    });
-    setShowForm(true);
-  };
-
+  // Delete blog handler
   const handleDelete = async (id: string) => {
     try {
-      // Confirmation popup
-      const confirmDelete = window.confirm("Are you sure you want to delete this blog?");
-      if (!confirmDelete) return; // stop if user cancels
+      if (!window.confirm("Are you sure you want to delete this blog?")) return;
 
-      // API call
-      const response = await axios.delete(`${import.meta.env.VITE_PROD}/blogs/deleteBlog/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_PROD}/blogs/deleteBlog/${id}`, {
         withCredentials: true,
       });
 
-      // Success log
-      console.log("✅ Blog deleted:", response.data);
       toast.success("Blog deleted successfully!");
-      fetchBlogs()
+      fetchBlogs();
     } catch (error: any) {
-      if (error.response) {
-        // Server responded with a status code outside 2xx
-        console.error("❌ Server Error:", error.response.data);
-        toast.error(`Failed to delete blog: ${error.response.data.message || "Server error"}`);
-      } else if (error.request) {
-        // No response from server
-        console.error("❌ Network Error:", error.request);
-        toast.error("No response from server. Please try again later.");
-      } else {
-        // Something else went wrong
-        console.error("❌ Error:", error.message);
-        toast.error("An unexpected error occurred.");
-      }
+      console.error("Error deleting blog:", error.response?.data || error.message);
+      toast.error("Failed to delete blog");
     }
   };
 
+  // Delete SEO handler
   const handleDeleteSeo = async (id: string) => {
     try {
-      const res = await axios.delete(`${import.meta.env.VITE_PROD}/SeoRouter/delete/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_PROD}/SeoRouter/delete/${id}`, {
         withCredentials: true,
       });
       toast.success("SEO deleted successfully!");
-    fetchBlogs()
+      fetchBlogs();
     } catch (error) {
       console.error("Error deleting SEO:", error);
-      // handle error (toast, alert, etc.)
+      toast.error("Failed to delete SEO");
     }
   };
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900"></h1>
+        <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -269,13 +251,8 @@ const BlogManagement: React.FC = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                {editingBlog ? "Edit Blog" : "Add New Blog"}
-              </h2>
-              <button
-                onClick={resetForm}
-                className="text-gray-400 hover:text-gray-600"
-              >
+              <h2 className="text-xl font-semibold">{editingBlog ? "Edit Blog" : "Add New Blog"}</h2>
+              <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -283,91 +260,81 @@ const BlogManagement: React.FC = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog Title *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Blog Title *</label>
                   <input
                     type="text"
                     required
                     value={formData.blog_title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, blog_title: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, blog_title: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter blog blog_title"
+                    placeholder="Enter blog title"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog blog_title_url *
-                  </label>
+                {/* <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Blog Title URL *</label>
                   <input
                     type="text"
                     required
                     value={formData.blog_title_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, blog_title_url: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, blog_title_url: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter blog blog_title_url"
+                    placeholder="Enter blog title URL"
                   />
-                </div>
+                </div> */}
               </div>
-              {/* Images */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {["small_image", "large_image", "banner"].map((field) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {field.toUpperCase()}<p className="text-red-400">Image size should be 6MB</p>
 
+              {/* Image inputs */}
+              <div className="grid md:grid-cols-3 gap-4">
+                {([ "large_image", "banner"] as (keyof FormDataState)[]).map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {field === "large_image"?"Side Image":"Banner"} <br />
+                      <span className="text-xs text-red-500">Max size: 6MB</span>
                     </label>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, field)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full border border-gray-300 rounded-lg p-1"
                     />
-                    {formData[field as keyof typeof formData] && (
+                    {/* Preview */}
+                    {(formData[`${field}Preview` as keyof FormDataState] || formData[field]) && (
                       <img
-                        src={formData[field as keyof typeof formData] as string}
-                        alt="Preview"
+                        src={
+                          (formData[`${field}Preview` as keyof FormDataState] as string) ||
+                          (typeof formData[field] === "string" ? (formData[field] as string) : "")
+                        }
+                        alt={`${field} preview`}
                         className="mt-2 h-20 w-full object-cover rounded"
                       />
                     )}
                   </div>
                 ))}
               </div>
-              
 
-              {/* Rich Text Editor */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Blog blog_content *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Blog Content *</label>
                 <RichTextEditor
                   value={formData.blog_content}
-                  onChange={(blog_content: string) =>
-                    setFormData({ ...formData, blog_content })
-                  }
+                  onChange={(content) => setFormData({ ...formData, blog_content: content })}
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-end space-x-3 pt-4 border-t">
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                  className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>{editingBlog ? "Update" : "Create"} Blog</span>
+                  <Save className="w-5 h-5" />
+                  <span>{editingBlog ? "Update Blog" : "Create Blog"}</span>
                 </button>
               </div>
             </form>
@@ -375,102 +342,92 @@ const BlogManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Blog Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      {/* Blog List Table */}
+      <div className="overflow-x-auto shadow rounded-lg overflow-hidden">
+        <table className="w-full shadow rounded-lg overflow-hidden text-left border-collapse ">
+          <thead className="bg-gray-100 ">
+            <tr className="border-b ">
+              <th className=" px-4 py-2">Blog Title</th>
+              <th className=" px-4 py-2">Side Image</th>
+              <th className=" px-4 py-2">Banner</th>
+              <th className=" px-4 py-2">SEO</th>
+              {/* <th className=" px-4 py-2">Created At</th> */}
+              <th className=" px-4 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {blogs.length === 0 && (
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Blog Content
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Blog Title Url                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  SEO
-
-
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Large Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Samall Image
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
+                <td colSpan={4} className="text-center p-4 text-gray-500">
+                  No blogs found.
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {blogs.map((blog) => (
-                <tr key={blog._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {blog.blog_title}
-                      </div>
+            )}
 
-                    </div>
-                  </td>
-                  <td className=" px-6 py-4 whitespace-nowrap">
+            {blogs.map((blog) => (
+              <tr key={blog._id} className="hover:bg-gray-50">
+                <td className="border border-gray-300 px-4 py-2">{blog.blog_title}</td>
+                 <td className="border border-gray-300 px-4 py-2">
+                   {blog?.large_image? (
+                      <a className=" text-blue-500 underline" href={blog?.large_image}>Click to view</a>
+                    ):(
+                      <p className="text-gray-500">Null</p>
+                    )}
+                 </td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {blog?.large_image? (
+                      <a target="_blank" className=" text-blue-500 underline" href={blog?.large_image}>Click to view</a>
+                    ):(
+                      <p className="text-gray-500">Null</p>
+                    )}
+                    </td>
+                
+                <td className="border border-gray-300 px-4 py-2">
+                       {blog.blogSeoDetails ? (
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-green-600">Done</span>
+                                        <button
+                                          onClick={() => handleDeleteSeo(blog.blogSeoDetails!._id)}
+                                          className="text-red-600 hover:text-red-900"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-yellow-600">Pending</span>
+                                    )}
+                </td>
+                {/* <td className="border border-gray-300 px-4 py-2">{new Date(blog.createdAt).toLocaleDateString()}</td> */}
+                <td className="border border-gray-300 px-4 py-2 space-x-2">
+                  <button
+                    onClick={() => handleEdit(blog)}
+                    className="text-blue-600 hover:underline"
+                    title="Edit Blog"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(blog._id)}
+                    className="text-red-600 hover:underline"
+                    title="Delete Blog"
+                  >
+                    Delete
+                  </button>
 
-                    <td
-                      className="px-6 py-4 text-sm text-gray-500"
-                      dangerouslySetInnerHTML={{ __html: blog.blog_content.slice(0, 30) }}
-                    />
-
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {blog.blog_title_url}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {blog.blogSeoDetails ? <div className="flex items-center">
-                      {/* <button
-                      onClick={() => handleDeleteSeo(blog?.blogSeoDetails?._id)}
-                      className="text-red-600 hover:text-red-900 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button> */}
-                      <button
-                        onClick={() => handleDeleteSeo(blog.blogSeoDetails?._id!)}
-                        className="text-red-600 hover:text-red-900 p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <p>Yes</p>
-                    </div> : "No"}
-
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <a target="_blank" href={blog.banner!}>Click to view</a>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <a target="_blank" href={blog.small_image}>Click to view</a>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                  {/* {blog.blogSeoDetails?._id && (
                     <button
-                      onClick={() => handleEdit(blog)}
-                      className="text-blue-600 hover:text-blue-900 p-1"
+                      onClick={() => handleDeleteSeo(blog.blogSeoDetails!._id)}
+                      className="text-red-600 hover:underline ml-3"
+                      title="Delete SEO"
                     >
-                      {/* <Edit className="w-4 h-4" /> */}
+                      Delete SEO
                     </button>
-                    <button
-                      onClick={() => handleDelete(blog._id)}
-                      className="text-red-600 hover:text-red-900 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )} */}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
