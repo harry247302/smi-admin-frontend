@@ -36,9 +36,11 @@ const ServiceManagement: React.FC = () => {
   // Fetch all services
   const fetchServices = async () => {
     try {
-      const res = await axios.get(`${API_BASE}`);
+      const res = await axios.get(`${API_BASE}/service`);
       const data = res.data;
       setServices(data.data || data);
+      console.log(res,":;;;;;;;:::::::::::::::::::::::::");
+      
     } catch (err) {
       console.error('Error fetching services:', err);
       toast.error('Failed to fetch services');
