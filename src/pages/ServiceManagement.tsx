@@ -6,6 +6,7 @@ import axios from 'axios';
 
 interface Service {
   _id?: string;
+  slug?: string;
   service_title: string;
   service_title_url: string;
   small_image: File | string;
@@ -318,6 +319,7 @@ const ServiceManagement: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Banner</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Small Image</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SEO</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -349,6 +351,10 @@ const ServiceManagement: React.FC = () => {
                     dangerouslySetInnerHTML={{ __html: service.service_content.slice(0, 30) }}
                   />
 
+                </td>
+
+                 <td className=" px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{service.slug}</div>
                 </td>
                 <td className="px-6 py-4 space-x-2">
                   {service?.serviceSeoDetails ? (
