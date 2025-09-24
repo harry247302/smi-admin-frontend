@@ -228,13 +228,13 @@ const SEOManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title *</label>
                 <input
                   type="text"
-                  maxLength={60}
+                  maxLength={150}
                   value={seoData.page_title}
                   onChange={(e) => handleChange('page_title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter meta title (50-60 chars)"
+                  placeholder="Enter meta title (100-150 chars)"
                 />
-                <p className="text-xs text-gray-500 mt-1">{seoData.page_title.length}/60 characters</p>
+                <p className="text-xs text-gray-500 mt-1">{seoData.page_title.length}/150 characters</p>
               </div>
 
               {/* Description */}
