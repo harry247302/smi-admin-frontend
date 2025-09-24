@@ -358,6 +358,7 @@ const handleSubmit = async (e: FormEvent) => {
 
      {/* Services Table */}
 <div className="bg-white shadow rounded-lg overflow-hidden">
+<div className="overflow-x-auto w-full">
   <table className="min-w-full divide-y divide-gray-200">
     <thead className="bg-gray-50">
       <tr>
@@ -378,9 +379,9 @@ const handleSubmit = async (e: FormEvent) => {
           </td>
         </tr>
       ) : (
-        services?.map(svc => (
+        services?.map((svc) => (
           <tr key={svc._id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="px-2 py-4">
               <div className="text-sm font-medium text-gray-900">{svc.service_title}</div>
               {svc.service_title_url && (
                 <div className="text-xs text-gray-500 truncate">{svc.service_title_url}</div>
@@ -419,7 +420,7 @@ const handleSubmit = async (e: FormEvent) => {
                 dangerouslySetInnerHTML={{
                   __html:
                     svc.service_content.length > 100
-                      ? svc.service_content.slice(0, 100) + "..."
+                      ? svc.service_content.slice(0, 100) + '...'
                       : svc.service_content,
                 }}
               />
@@ -430,7 +431,7 @@ const handleSubmit = async (e: FormEvent) => {
                 <div className="flex items-center space-x-2">
                   <span className="text-green-600 font-semibold">Done</span>
                   <button
-                    onClick={() => handleDeleteSeo(svc.serviceSeoDetails!._id)}
+                    onClick={() => handleDeleteSeo(svc.serviceSeoDetails._id)}
                     className="text-red-600 hover:text-red-900"
                     aria-label="Delete SEO"
                   >
@@ -462,6 +463,8 @@ const handleSubmit = async (e: FormEvent) => {
       )}
     </tbody>
   </table>
+</div>
+
 </div>
 
     </div>
